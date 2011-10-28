@@ -1,4 +1,6 @@
+version 0.4
+Add thread
+
 Version 0.1
 
-linux 环境下编写，使用的utf-8编码，在windows下可能出现打印乱码。
-用Python 的 IDLE 编辑器打开，然后F5运行没有乱码。
+Development environment: Mac os lion
