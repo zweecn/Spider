@@ -42,7 +42,7 @@ class BaiduMP3Decoder:
             subulrs.append(self.urlM(sub))
         self.strList = []
         for sub in subulrs:
-            if sub is not None:
+            if sub is not None and sub.strip() != '':
                 self.strList.append(sub)
         return self.strList
         '''
