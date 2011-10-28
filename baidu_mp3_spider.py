@@ -2,10 +2,11 @@
 # -*- coding: UTF-8 -*-
 # Author: Zhengwei
 
-"""docstring
+""" Get the mp3 in list.mp3.baidu.com.
+    Use muti thread.
 """
 
-__revision__ = '0.4'
+__revision__ = '0.5'
 
 import re, os, urllib2, xml, httplib
 import baidu_mp3_decoder
@@ -20,86 +21,11 @@ class BaiduMp3Spider(threading.Thread):
         self.siteList = []
         self.songList = []
         self.singerList = []
-        self.songSingerDict = {}
         self.topMatch = r'http://mp3.baidu.com/m\?rf=top-index&tn=baidump3&ct=\d*&word=.*&lm=-1'
-    '''
-    # when single thread, use this
-    def __init__(self):
-        self.topid = ''
-        self.songs = ['', '']
-        self.siteList = []
-        self.songList = []
-        self.singerList = []
-        self.songSingerDict = {}
-        self.topMatch = r'http://mp3.baidu.com/m\?rf=top-index&tn=baidump3&ct=\d*&word=.*&lm=-1'
-    '''
-
-    '''
-    # When use one function, use this
-    '''
-    def getTopUrlList(self):
-        '''
-        Get the top xxx song and singer
-        '''
-        conn = httplib.HTTPConnection('list.mp3.baidu.com')
-        conn.request('GET', self.topid)
-        response = conn.getresponse()
-        html = response.read().decode('gb18030').encode('utf-8')
-        conn.close()
-        matchSite = re.compile(self.topMatch)
-        self.siteList = matchSite.findall(html)
-        for site in self.siteList:
-            tempList = site.split('&')
-            songSinger = ''
-            try:
-                songSinger = tempList[3]
-            except:
-                print 'Out of range 1'
-                continue
-
-            songSinger = songSinger.split('=')
-            key = songSinger[1].replace('+', '-')
-            self.songSingerDict[key] = []
-            
-            print 'name:', key
-            '''
-            Finish song and singer
-            '''
-            '''
-            Get the songBox list of every song
-            '''
-            html = ''
-            try:
-                html = urllib2.urlopen(site.decode('utf-8').encode('gbk')).read().decode('gbk').encode('utf-8')
-            except:
-                print 'HTTP connection error, code 0x01'
-                continue
-
-            secondClassMatch = r'<td class="second">.*?</td>'
-            secondMatch = re.compile(r'http://box\.zhangmen\.baidu\.com/m.*?"')
-            secondList = secondMatch.findall(html)
-            for i in range(len(secondList)):
-                secondList[i] = secondList[i][0:-1]
-            '''
-            Finish get songBox list
-            '''
-            '''
-            Get mp3 url list
-            '''
-
-            for songBox in secondList:
-                #print 'songBox', songBox
-                try:
-                    html = urllib2.urlopen(songBox).read()
-                    #html = urllib2.urlopen(songBox.decode('utf-8').encode('gb18030').read().decode('gb18030').encode('utf-8'))
-                    baiduDecoder = baidu_mp3_decoder.BaiduMP3Decoder()
-                    urlList = baiduDecoder.decode(html)
-                    for u in urlList:
-                        print 'url:', u
-                except:
-                    print 'HTTP connection error, code 0x02'
-                    return None
-
+   
+    def removeSame(self, seq):
+        # Not order preserving
+        return {}.fromkeys(seq).keys()
 
     def getMP3UrlList(self, songBoxList):
         '''
@@ -118,7 +44,7 @@ class BaiduMp3Spider(threading.Thread):
             except:
                 print 'HTTP connection error, code 0x02'
                 continue
-        return mp3List
+        return self.removeSame(mp3List)
 
     def getSongBoxList(self, site):
         '''
@@ -173,9 +99,8 @@ class BaiduMp3Spider(threading.Thread):
             songBoxList = self.getSongBoxList(site) #get songBox of the song, with read the site
             mp3List = self.getMP3UrlList(songBoxList) #get mp3List of the song, with read the songBoxList
             if mp3List is not None and mp3List != []:
-                self.songSingerDict[key] = mp3List
                 print 'name:', key
-                print 'url', self.songSingerDict[key]
+                print 'url', mp3List
     
     # when single thread, use this
     def getMp3s(self):
@@ -203,15 +128,24 @@ class BaiduMp3Spider(threading.Thread):
                 continue
             mp3List = self.getMP3UrlList(songBoxList) # read the mp3List
             if mp3List is not None and mp3List != []:
-                self.songSingerDict[key] = mp3List
-                print 'name:', key
-                print 'url:', self.songSingerDict[key]
-            
+                #print 'name:', key
+                #print 'url:', mp3List
+                fileName = folder + os.sep + key + '.txt'
+                print fileName
+                out = open(fileName, 'a')
+                for url in mp3List:
+                    print >> out, url
+                out.close()
             self.indexQueue.task_done()
 
 indexQueue = Queue.Queue()
+folder = 'Baidu_mp3'
+
 def main():
     print 'Starting...'
+    if not os.path.isdir(folder):
+        os.system('mkdir ' + folder)
+
     baiduMp3Spider = BaiduMp3Spider(indexQueue)
     indexList = baiduMp3Spider.getSiteList()
     for index in indexList:
@@ -228,3 +162,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

@@ -1,6 +1,13 @@
+-----------------------------
+version 0.5 @2011-10-28
+	Write the URLs to files.
+-----------------------------
 version 0.4
-Add thread
-
+	Add thread.
+-----------------------------
 Version 0.1
+	Get the URL of mp3.
 
-Development environment: Mac os lion
+Baidu MP3 spider, get the MP3s from http://list.mp3.baidu.com
+Development environment: Mac os lion (10.7.1)
+Requirement: Python 2.6+
